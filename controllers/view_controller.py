@@ -9,12 +9,14 @@ from components.ui_components import load_lottieurl
 from data_utils import get_df_from_data
 import base64
 
+
+
 class ViewController:
     def __init__(self):
 
         st.set_page_config(
-            page_title='Whatsapp Chat Analyser',
-            page_icon=':test_tube:',
+            page_title='Mnemo Chat Analyser',
+            page_icon='💬',
             layout='centered',
             initial_sidebar_state='auto',
 
@@ -23,19 +25,19 @@ class ViewController:
         self.lottie_chat = load_lottieurl('animations_data/phone_chat.json')
         self.lottie_message = load_lottieurl('animations_data/message_lottie.json')
         self.lottie_data = load_lottieurl('animations_data/data_charts.json')
-        self.github_link = 'https://github.com/akiragondo/whatsapp_analyser'
+        #self.github_link = 'https://github.com/akiragondo/whatsapp_analyser'
         self.file_path = 'sample_whatsapp_export.txt'
 
 
     def build_graph_ui(self):
         c1, c2 = st.columns((2, 1))
-        c1.title("""Whatsapp Chat Analyser""")
-        c1.subheader("""Discover trends, analyse your chat history and judge your friends!""")
-        c1.markdown(f"Dont worry, we wont peek, we're not about that, in fact, you can check the code in here: [link]({self.github_link})")
-        uploaded_file = c1.file_uploader(label="""Upload your Whatsapp chat, don't worry, we won't peek""")
+        c1.title("""Mnemo Chat Analyser""")
+        c1.subheader("""How can I get the chat data from my group?""")
+        c1.markdown(f"Open up whatsapp. Within the whatsapp group click on the group name and scroll all the way down. Click 'export chat' and select 'without media' and then 'add to notes'. Now you have the ZIP file in your notes. Meanwhile download the app 'send-anywhere' from the App Store/Play Store. Afterwards head over to the ZIP file in your notes and click on the ZIP file. Click the icon in the top right corner and select 'send with: Send Anywhere'. You will receive a code, now on your desktop, go to www.send-anywhere.com and type in the 6 digit code in the receive box. Extract the ZIP file and paste the .txt file into my application.    ")
+        uploaded_file = c1.file_uploader(label="""Upload the chat.txt file here""")
 
         with open(self.file_path, 'r') as f:
-            dl_button = download_button(f.read(), 'sample_file.txt', 'Try it out with my sample file!')
+            dl_button = download_button(f.read(), 'sample_file.txt', 'Try it out with this sample file!')
             c1.markdown(dl_button, unsafe_allow_html=True)
 
         with c2:
@@ -130,13 +132,15 @@ class ViewController:
                 st.markdown(f"This is how many messages (on average) your conversations had, the more of them there are, the more messages you guys exchanged everytime one of you started the convo!")
                 st.pyplot(fig)
 
-        thanks_line = """Special thanks to Charly Wargnier and Timon Schmelzer for the suggestions and jrieke for making the custom CSS download button!"""
+
+
+       
         st.markdown("""    <style>
         footer {
             visibility: hidden;
             }
         footer:after {
-            content:'"""+ thanks_line+ """'; 
+            content:'"""  """'; 
             visibility: visible;
             display: block;
             position: relative;
@@ -145,90 +149,20 @@ class ViewController:
             top: 2px;
         }</style>""", unsafe_allow_html=True)
 
+
+
     def build_about_me_ui(self):
-        st.title("About the Creator")
+        st.title("About Me")
         c1, c2 = st.columns([1,1])
-        c1.markdown("Hey! My name is Gustavo Akira Gondo, a Computer Engineer from Brazil! This page is still under "
-                    "construction since I want to finish the rest of the app before I focus on this bit, but if you "
-                    "would like to ask me anything of if you have any projects you think I could be a good addition "
-                    "to, please, send me a message at gustavogondo@alunos.utfpr.edu.br")
+        c1.markdown("You can find more projects that I've worked on on my instagram max_mnemo --> https://www.instagram.com/max_mnemo/?hl=de . " )
+        c1.markdown("For all the animated small icons I used the website lottiefiles.com. All the uploaded files can't be seen by me. The data is sent encrypted to the streamlit.io servers and they are deleted right after you leave this app. ")
         c2.image('images/me.jpg')
 
-    def build_conversation_explanation(self):
-        st.title('How does the chat analyser work?')
-        c1, c2 = st.columns([1,1])
-        c1.header('Data Analysis')
-        c1.markdown("""The core of this app is made up of very simple data analysis, such as the aggregation of the 
-        time of day the messages were sent, or by counting the number of messages were sent each month, however, 
-        calculations such as reply times and number of messages in a conversation aren't so trivial, in which we'll 
-        dive deeper right now!""")
-        with c2:
-            st_lottie(self.lottie_data, height=300)
-        st.header('Conversations')
-        st.markdown("""In order to analyse conversations, we need to first find a way to define conversations based 
-        on a sequence of individual messages. To do that, let's make our definition of a conversation:""")
-        st.info("""Conversations:        
-        The event of the exchange of messages between two people during a certain period of time""")
-        st.markdown("""To implement that in our messages, I have implemented a code that, if it detects a significant 
-        amount of time between two messages, say around 1 hour, it'll define the end of a conversation and the 
-        beginning of a new one! Here's the code for it:""")
-        image = open('images/ConvDiagram.svg', 'r').read()
-        self.render_svg(image)
-        st.code("""def cluster_into_conversations(
-        df : pd.DataFrame, 
-        inter_conversation_threshold_time: int = 60
-        ):
-    threshold_time_mins = np.timedelta64(inter_conversation_threshold_time, 'm')
 
-    # This calculates the time between the current message and the previous one
-    conv_delta = df.index.values - np.roll(df.index.values, 1)
-    conv_delta[0] = 0
 
-    # This detects where the time between messages is higher than the threshold
-    conv_changes = conv_delta > threshold_time_mins
-    conv_changes_indices = np.where(conv_changes)[0]
-    conv_codes = []
-
-    # This encodes each message with its own conversation code
-    last_conv_change = 0
-    for i, conv_change in enumerate(conv_changes_indices):
-        conv_codes.extend([i]*(conv_change - last_conv_change))
-        last_conv_change = conv_change
-
-    # This serves to ensure that the conversation codes 
-    # and the number of messages are aligned
-    conv_codes = pad_list_to_value(conv_codes, len(df), conv_codes[-1])
-    conv_changes = pad_list_to_value(conv_changes, len(df), False)
-
-    return conv_codes, conv_changes
-        """)
-        st.header('Replies')
-        st.markdown("""This is basically the same issue as the one we had in the conversations, we first need to 
-        define it:""")
-        st.info("""Reply:
-        The response of one person to the messages sent by the previous one within a conversation""")
-        st.markdown("""This is faily easy to implement, I will say that a reply happens when the subject changes 
-        within a conversation, here's the code for it!:""")
-        image = open('images/ReplyDiagram.svg', 'r').read()
-        self.render_svg(image)
-        st.code("""def find_replies(df : pd.DataFrame):
-    # These are sanity checks in order to see if I made any ordering mistakes
-    assert('Conv code' in df.columns)
-    assert('Conv change' in df.columns)
-    assert('Subject' in df.columns)
-    # Ordinal encoders will encode each subject with its own number
-    message_senders = OrdinalEncoder().fit_transform(df['Subject'].values.reshape(-1,1))
-    # This compares the current subject with the previous subject 
-    # In a way that computers can optimize
-    sender_changed = (np.roll(message_senders, 1) - message_senders).reshape(1, -1)[0] != 0
-    sender_changed[0] = False
-    # This checks if the reply isn't within a different conversation
-    is_reply = sender_changed & ~df['Conv change']
-    return is_reply, sender_changed""")
-        st.markdown("""Notice how that implies that if a reply is the start of a new conversation, it's not a reply, 
-        it's the start of a new conversation. This helps us segregate the replies to only those that happen within a 
-        conversation, say, when you two are really **Talking** to each other, which I think is more indicative of the 
-        level of interaction you two are having""")
+ 
+        
+   
 
     def render_svg(self, svg):
         """Renders the given svg string."""
@@ -236,14 +170,17 @@ class ViewController:
         html = f"""<img style = "width: 100%" src="data:image/svg+xml;base64,{b64}"/>"""
         st.write(html, unsafe_allow_html=True)
 
+
+
+
     def build_sidebar(self):
 
         with st.sidebar:
-            st_lottie(self.lottie_message, quality='High', height=100, key='message_lottie')
-        st.sidebar.title("WhatsApp Chat Analyser")
+            st_lottie(self.lottie_message, quality='High', height=150, key='message_lottie')
+        st.sidebar.title("WhatsApp Chat Analysis")
         pages = [
             'WhatsApp Chat Analyser',
-            'How does the Chat Analyser Work?',
+            
             'About the Creator'
         ]
         selected_page = st.sidebar.radio(
@@ -256,7 +193,7 @@ class ViewController:
         selected_page = self.build_sidebar()
         if selected_page == 'WhatsApp Chat Analyser':
             self.build_graph_ui()
-        elif selected_page == 'How does the Chat Analyser Work?':
-            self.build_conversation_explanation()
+       
+
         elif selected_page == 'About the Creator':
             self.build_about_me_ui()
